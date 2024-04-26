@@ -50,7 +50,7 @@ nginx:
           # evaluated.
           return 200 'alive';
         }
-        set $proxy_pass_url http://go-hello-world-service.putils.svc.cluster.local:9090;
+        set $proxy_pass_url http://sample-app-go-hello-world-service.putils.svc.cluster.local:9090;
         location / {
           proxy_pass $proxy_pass_url;
         }
@@ -64,4 +64,3 @@ nginx:
     port: 443
     targetPort: 0
   replicas: 1
-  type: LoadBalancer
