@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "beyla.fullname" . }}-beyla
+  labels:
+  {{- include "beyla.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      instrumentation: beyla
+    {{- include "beyla.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        instrumentation: beyla
+      {{- include "beyla.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: '{{ include "beyla.fullname" . }}-beyla'
+      hostPID: true
+      containers:
+      - env:
+        - name: BEYLA_CONFIG_PATH
+          value: {{ quote .Values.beyla.beyla.env.beylaConfigPath }}
+        - name: BEYLA_PROMETHEUS_PORT
+          value: {{ quote .Values.beyla.beyla.env.beylaPrometheusPort }}
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.beyla.beyla.image.repository }}:{{ .Values.beyla.beyla.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.beyla.beyla.imagePullPolicy }}
+        name: beyla
+        ports:
+        - containerPort: 9092
+          hostPort: 9092
+          name: http-metrics
+          protocol: TCP
+        resources: {}
+        securityContext: {{- toYaml .Values.beyla.beyla.containerSecurityContext | nindent
+          10 }}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /config
+          name: beyla-config
+        - mountPath: /var/run/beyla
+          name: var-run-beyla
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ include "beyla.fullname" . }}-config
+        name: beyla-config
+      - emptyDir: {}
+        name: var-run-beyla

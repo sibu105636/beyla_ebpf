@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "beyla.fullname" . }}-service
+  labels:
+    app: beyla
+  {{- include "beyla.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    instrumentation: beyla
+  {{- include "beyla.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.service.ports | toYaml | nindent 2 }}
