@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sample-app.fullname" . }}-go-hello-world
+  labels:
+  {{- include "sample-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.goHelloWorld.replicas }}
+  selector:
+    matchLabels:
+      app: go-hello-world
+    {{- include "sample-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: go-hello-world
+      {{- include "sample-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.goHelloWorld.goHelloWorld.image.repository }}:{{ .Values.goHelloWorld.goHelloWorld.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.goHelloWorld.goHelloWorld.imagePullPolicy }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 15
+          timeoutSeconds: 5
+        name: go-hello-world
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+        resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sample-app.fullname" . }}-go-hello-world-service
+  labels:
+  {{- include "sample-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.goHelloWorldService.type }}
+  selector:
+    app: go-hello-world
+  {{- include "sample-app.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.goHelloWorldService.ports | toYaml | nindent 2 }}

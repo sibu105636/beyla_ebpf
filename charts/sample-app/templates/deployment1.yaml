@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sample-app.fullname" . }}-nginx
+  labels:
+  {{- include "sample-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.nginx.replicas }}
+  selector:
+    matchLabels:
+      name: nginx
+    {{- include "sample-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        name: nginx
+      {{- include "sample-app.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_CLUSTER_DOMAIN
+          value: {{ quote .Values.kubernetesClusterDomain }}
+        image: {{ .Values.nginx.nginx.image.repository }}:{{ .Values.nginx.nginx.image.tag
+          | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.nginx.nginx.imagePullPolicy }}
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        - containerPort: 443
+          name: https
+          protocol: TCP
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/nginx
+          name: config-volume
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: {{ include "sample-app.fullname" . }}-nginx
+        name: config-volume
