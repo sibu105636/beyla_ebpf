@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sample-app.fullname" . }}-go-hello-world-service
+  labels:
+  {{- include "sample-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.goHelloWorldService.type }}
+  selector:
+    app: go-hello-world
+  {{- include "sample-app.selectorLabels" . | nindent 4 }}
+  ports:
+	{{- .Values.goHelloWorldService.ports | toYaml | nindent 2 }}
